@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence of Morning</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Inter:wght@300;400&family=Playfair+Display:wght@700;900&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background: #0a0e27;
+            color: #fff;
+        }
+        
+        /* Password protection overlay */
+        #password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        
+        #password-overlay.hidden {
+            display: none;
+        }
+        
+        .password-container {
+            text-align: center;
+            max-width: 400px;
+            padding: 2rem;
+        }
+        
+        .password-container h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 215, 0, 0.8);
+            font-weight: 300;
+        }
+        
+        .password-container p {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+        
+        #password-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        #password-input:focus {
+            outline: none;
+            border-color: rgba(255, 215, 0, 0.6);
+        }
+        
+        #password-submit {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #password-submit:hover {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: rgba(255, 215, 0, 0.6);
+        }
+        
+        .password-error {
+            color: rgba(220, 20, 60, 0.8);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .password-error.show {
+            opacity: 1;
+        }
+        
+        #main-content {
+            display: none;
+        }
+        
+        #main-content.visible {
+            display: block;
+        }
+        
+        .scene {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+        }
+        
+        #night { background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 100%); min-height: 120vh; }
+        #dawn { background: linear-gradient(180deg, #1a1f3a 0%, #2d1b3d 50%, #4a2c42 100%); }
+        #memory { background: linear-gradient(180deg, #4a2c42 0%, #3d2d4a 50%, #2a2438 100%); min-height: 400vh; }
+        #depth { background: linear-gradient(180deg, #2a2438 0%, #1a1428 50%, #0d0a1a 100%); min-height: 120vh; }
+        #choice { background: linear-gradient(180deg, #0d0a1a 0%, #2d1b3d 50%, #5a4a52 100%); min-height: 150vh; }
+        #continuation { background: linear-gradient(180deg, #5a4a52 0%, #7a6a72 50%, #9a8a92 100%); min-height: 120vh; }
+        
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .text-container {
+            position: relative;
+            z-index: 10;
+            max-width: 900px;
+            text-align: center;
+        }
+        
+        .line {
+            font-size: 1.5rem;
+            line-height: 2.5;
+            font-weight: 300;
+            opacity: 0;
+            transform: translateY(20px);
+            margin: 2rem 0;
+        }
+        
+        .line.visible { animation: fadeInUp 2s ease forwards; }
+        .line.ephemeral { animation: fadeInOut 8s ease forwards; }
+        .line.anchor { font-weight: 400; color: #ffd700; }
+        
+        .french {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            color: rgba(255, 215, 0, 0.6);
+            font-style: italic;
+            letter-spacing: 0.05em;
+        }
+        
+        .evidence {
+            font-size: 1.2rem;
+            line-height: 2;
+            color: rgba(255, 255, 255, 0.85);
+            margin: 1.5rem 0;
+        }
+        
+        .quote {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            line-height: 2.2;
+            color: rgba(255, 215, 0, 0.9);
+            font-style: italic;
+            margin: 3rem 0;
+        }
+        
+        .song-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            color: rgba(255, 215, 0, 0.85);
+            animation: sway 6s ease-in-out infinite;
+            margin: 2.5rem 0;
+            letter-spacing: 0.03em;
+        }
+        
+        .convo {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.75);
+            text-align: left;
+            max-width: 700px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .speaker { color: rgba(255, 215, 0, 0.7); font-weight: 500; margin-top: 1rem; }
+        
+        .moon {
+            position: fixed;
+            top: 15%;
+            right: 15%;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            z-index: 5;
+            animation: moonPulse 4s ease-in-out infinite;
+        }
+        
+        .sun {
+            position: fixed;
+            top: 20%;
+            right: 20%;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            opacity: 0;
+            z-index: 5;
+        }
+        
+        .sun.visible { animation: sunRise 3s ease forwards; }
+        
+        .fountain {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+        }
+        
+        .ripple {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: rippleOut 4s ease-out infinite;
+        }
+        
+        .ripple:nth-child(1) { width: 100px; height: 100px; animation-delay: 0s; }
+        .ripple:nth-child(2) { width: 100px; height: 100px; animation-delay: 1.3s; }
+        .ripple:nth-child(3) { width: 100px; height: 100px; animation-delay: 2.6s; }
+        
+        .symbol {
+            position: fixed;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 2rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        .symbol.drift { animation: drift 20s ease-in-out infinite; }
+        .symbol.float { animation: float 15s ease-in-out infinite; }
+        
+        .horizon {
+            width: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent);
+            margin: 4rem auto;
+            opacity: 0;
+        }
+        
+        .horizon.visible { animation: expandLine 3s ease forwards; }
+        
+        .heart {
+            position: fixed;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            color: rgba(220, 20, 60, 0.3);
+            opacity: 0;
+            z-index: 3;
+        }
+        
+        .heart.visible {
+            animation: heartBeat 2s ease-in-out infinite;
+            opacity: 1;
+        }
+        
+        .important-declaration {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            color: #dc143c;
+            text-transform: none;
+            line-height: 1.4;
+        }
+        
+        .toggle {
+            position: fixed;
+            bottom: 2rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .toggle:hover {
+            border-color: rgba(255, 215, 0, 0.6);
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        #audioToggle { right: 2rem; }
+        #pauseToggle { left: 2rem; }
+        
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInOut { 0%, 100% { opacity: 0; } 20%, 80% { opacity: 1; } }
+        @keyframes moonPulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+        @keyframes sunRise { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes rippleOut {
+            0% { width: 50px; height: 50px; opacity: 0.6; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+            100% { width: 300px; height: 300px; opacity: 0; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        }
+        @keyframes drift { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(30px, -20px); } 66% { transform: translate(-20px, 30px); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-30px); } }
+        @keyframes sway { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(10px); } }
+        @keyframes expandLine { from { width: 0; opacity: 0; } to { width: 400px; opacity: 1; } }
+        @keyframes heartBeat { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.1); } }
+        
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+        }
+        
+        @media (max-width: 768px) {
+            .line { font-size: 1.2rem; line-height: 2; }
+            .moon, .sun { width: 80px; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Password Protection -->
+    <div id="password-overlay">
+        <div class="password-container">
+            <h2>Evidence of Morning</h2>
+            <p>This monument is protected. Enter the password to continue.</p>
+            <input type="password" id="password-input" placeholder="Password" autocomplete="off">
+            <button id="password-submit">Enter</button>
+            <div class="password-error" id="password-error">Incorrect password</div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div id="main-content">
+    <canvas id="particles"></canvas>
+    <div class="moon"></div>
+    <div class="sun" id="sun"></div>
+    <div class="heart" id="finalHeart">♡</div>
+    <div class="toggle" id="audioToggle">☾</div>
+    <div class="toggle" id="pauseToggle">❚❚</div>
+    
+    <section class="scene" id="night">
+        <div class="text-container">
+            <div class="line" data-delay="2000">The night was long.</div>
+            <div class="line french" data-delay="4000">La nuit savait.</div>
+            <div class="line" data-delay="6000">But someone decided to wait for morning.</div>
+        </div>
+    </section>
+    
+    <section class="scene" id="dawn">
+        <div class="text-container">
+            <div class="line" data-delay="500">Light comes slowly.</div>
+            <div class="horizon" id="firstBreath"></div>
+            <div class="song-title" data-delay="2000">breathin</div>
+            <div class="line" data-delay="2800">Keep breathing. One breath at a time.</div>
+            <div class="line" data-delay="3500">Just keep breathing.</div>
+        </div>
+    </section>
+    
+    <section class="scene" id="memory">
+        <div class="text-container">
+            <div class="line anchor" data-delay="300">A mother who cried when the door opened.</div>
+            <div class="convo visible" data-delay="800">
+                <div class="speaker">Mom:</div>
+                <div>"Always believe in yourself. Always. Do it for yourself."</div>
+                <div style="margin-top:0.8rem;">"You owe me nothing. You owe it to yourself."</div>
+                <div style="margin-top:0.8rem;">"You are very, very smart."</div>
+                <div style="margin-top:0.8rem;">"Я вірю в тебе більше ніж сама в себе інколи"</div>
+                <div style="margin-top:0.8rem;font-style:italic;opacity:0.85;">(I believe in you more than I believe in myself sometimes)</div>
+                <div style="margin-top:0.8rem;">"Тобою захоплюються"</div>
+                <div style="margin-top:0.8rem;font-style:italic;opacity:0.85;">(People admire you)</div>
+                <div style="margin-top:0.8rem;">"Я не буду міняти свою дитину, тому що комусь так не подобається"</div>
+                <div style="margin-top:0.8rem;font-style:italic;opacity:0.85;">(I won't change my child because someone doesn't like it)</div>
+                <div style="margin-top:0.8rem;">"Я знаю, що ти зможеш. Я ніколи в тобі не сумнівалась"</div>
+                <div style="margin-top:0.8rem;font-style:italic;opacity:0.85;">(I know you can do it. I never doubted you)</div>
+                <div style="margin-top:0.8rem;">"Ти такий розумний, що ти навіть можливо і не усвідомлюєш який ти розумний"</div>
+                <div style="margin-top:0.8rem;font-style:italic;opacity:0.85;">(You're so smart you might not even realize how smart you are)</div>
+                <div style="margin-top:0.8rem;">"Я тебе люблю. Ти це знаєш?"</div>
+                <div style="margin-top:0.8rem;font-style:italic;opacity:0.85;">(I love you. Do you know that?)</div>
+            </div>
+            
+            <div class="line anchor" data-delay="1400">A father who shows love through actions.</div>
+            <div class="convo visible" data-delay="1900">
+                <div class="speaker">Dad:</div>
+                <div>He hugs you. Tells you he loves you.</div>
+                <div style="margin-top:0.8rem;">Praises you in front of everyone.</div>
+                <div style="margin-top:0.8rem;">To Mom, in private: "He's gonna have a bright future."</div>
+                <div style="margin-top:0.8rem;">When he saw your insecurity, he yelled:</div>
+                <div style="margin-top:0.8rem;font-weight:500;">"Who is better than you? Who? No one is."</div>
+                <div style="margin-top:0.8rem;">Drove for an hour at 4 AM to bring you a suitcase.</div>
+                <div style="margin-top:0.8rem;">You knew he would show up. And he did.</div>
+                <div style="margin-top:0.8rem;">"Я тебе люблю. Ти це знаєш?"</div>
+            </div>
+            
+            <div class="line evidence" data-delay="1800">A friend who helped while burning with fever.</div>
+            <div class="convo visible" data-delay="2300">
+                <div class="speaker">November 20th — After she listened:</div>
+                <div style="font-style:italic;opacity:0.9;">"привіт. дякую, що послухала мене вчора і підтримала. для мене дуже багато значить, що ти виділила свій час, щоб поговорити зі мною. це неймовірно цінно для мене. дякую, що ти є💙"</div>
+                <div style="margin-top:1rem;">
+                    <div class="speaker">Uliana:</div>
+                    <div style="font-style:italic;opacity:0.9;">"Сашко, мені надзвичайно приємно, що ти подзвонив мені і довірився мені, це також багато означає для мене 🥺🫂"</div>
+                </div>
+            </div>
+            
+            <div class="convo visible" data-delay="3300">
+                <div class="speaker">January 15th — After a night of excruciating pain:</div>
+                <div>"Улян, вибач, будь ласка. зі мною щось дуже серйозно не так."</div>
+                <div style="margin-top:0.8rem;">"я не хотів так зробити, може ти би хотіла поговорити?"</div>
+                <div style="margin-top:1rem;">
+                    <div class="speaker">Uliana:</div>
+                    <div>"Саш, я не обіжаюся, але в мене температура 38-39, я ледве ходжу"</div>
+                    <div style="margin-top:0.8rem;font-style:italic;opacity:0.8;">She stood up anyway. For you.</div>
+                </div>
+            </div>
+            
+            <div class="line evidence" data-delay="3300">A therapist who answered after the panic attack.</div>
+            <div class="line anchor" data-delay="3900">January 16. A deep conversation in the office.</div>
+            <div class="line evidence" data-delay="4500">You told her what you wanted to do.</div>
+            
+            <div class="line anchor" data-delay="5300">A psychiatrist who answered.</div>
+            <div class="line evidence" data-delay="5800">You sent her documents at 10 PM. Made by AI.</div>
+            <div class="line evidence" data-delay="6300">You didn't know what else to do.</div>
+            <div class="convo visible" data-delay="6800">
+                <div class="speaker">Psychiatrist:</div>
+                <div>"She has a personal life, but she wants to hear YOU."</div>
+                <div style="margin-top:0.8rem;">"I see your pain. These are real painful things that happened to you."</div>
+                <div style="margin-top:0.8rem;">"You are important."</div>
+                <div style="margin-top:0.8rem;">"How is it not real if it hurts you so much?"</div>
+                <div style="margin-top:0.8rem;">"Nobody has the right to minimize your problems."</div>
+                <div style="margin-top:0.8rem;">"It is not a sign of weakness."</div>
+                <div style="margin-top:0.8rem;">"You have your whole life ahead of you."</div>
+                <div style="margin-top:0.8rem;">"People like you who go to therapy often become successful in life."</div>
+                <div style="margin-top:0.8rem;">"1-2 years of therapy can help."</div>
+                <div style="margin-top:0.8rem;">"Aren't 2 years worth it?"</div>
+                <div style="margin-top:0.8rem;">"It is possible."</div>
+                <div style="margin-top:0.8rem;">"I believe you can do it."</div>
+            </div>
+            
+            <div class="line evidence" data-delay="6800">January 14. After the panic attack, you reached out.</div>
+            <div class="convo visible" data-delay="7300">
+                <div class="speaker">To Uliana (after November 20th, after she helped you):</div>
+                <div>"Улян, вибач, будь ласка. зі мною щось дуже серйозно не так."</div>
+                <div style="margin-top:0.8rem;">"я не хотів так зробити, може ти би хотіла поговорити?"</div>
+                <div style="margin-top:0.8rem;">And she said yes. Even with a fever.</div>
+            </div>
+            
+            <div class="line ephemeral" data-delay="8300">Pain. No electricity. Salt water by flashlight.</div>
+            <div class="line anchor" data-delay="9300">A choice: exam or psychiatrist. Life won.</div>
+            
+            <div class="fountain" id="fountain">
+                <div class="ripple"></div>
+                <div class="ripple"></div>
+                <div class="ripple"></div>
+            </div>
+            
+            <div class="line french" data-delay="10300">Comme une fontaine, l'amour continue.</div>
+            
+            <div class="line evidence" data-delay="11300">Students who started loving English because of how it was taught.</div>
+            <div class="convo visible" data-delay="11900">
+                <div class="speaker">English Teacher (to Mom, every time):</div>
+                <div>"I love him so much. He is so smart."</div>
+            </div>
+            
+            <div class="line anchor" data-delay="12900">Highest score in the region.</div>
+            <div class="line evidence" data-delay="13500">"НУ НАШШ" "він так і хотів. так і зробив. це заслуговує поваги"</div>
+            <div class="line anchor" data-delay="14300">44,000 strangers: be safe. We want you alive.</div>
+            
+            <div class="song-title" data-delay="15300">ghostin</div>
+            <div class="line" data-delay="15900">A song that made you sob.</div>
+            <div class="line anchor" data-delay="16500">Now you smile listening to it.</div>
+            <div class="line" data-delay="17200">Holding two truths at once. Loving while grieving.</div>
+            
+            <div class="song-title" data-delay="18200">santa doesn't know you like I do</div>
+            <div class="line" data-delay="18800">Being truly seen. Love saves the world.</div>
+            
+            <div class="song-title" data-delay="19800">no ordinary thing</div>
+            <div class="line" data-delay="20400">This love, this life — extraordinary.</div>
+            
+            <div class="song-title" data-delay="21400">bye</div>
+            <div class="line" data-delay="22000">Letting go of what no longer serves.</div>
+        </div>
+    </section>
+    
+    <section class="scene" id="depth">
+        <div class="text-container">
+            <div class="line ephemeral" data-delay="800">Moments of wanting to disappear.</div>
+            <div class="line ephemeral" data-delay="1600">A secret that burned.</div>
+            <div class="convo visible" data-delay="2400">
+                <div class="speaker">Mom:</div>
+                <div>"The only thing that would break you is something related to your family."</div>
+                <div style="margin-top:0.8rem;font-style:italic;opacity:0.7;">She didn't know how close she was.</div>
+            </div>
+            <div class="line" data-delay="3600">The truth is bitter. Sweet lies are easier.</div>
+            <div class="line anchor" data-delay="4400">But the truth comes out, sooner or later.</div>
+        </div>
+    </section>
+    
+    <section class="scene" id="choice">
+        <div class="text-container">
+            <div class="line anchor" data-delay="1000">This is what choosing life looks like.</div>
+            <div class="line" data-delay="2000">Not perfect. Just here.</div>
+            
+            <div class="convo visible" data-delay="3200">
+                <div class="speaker">Legally Blonde:</div>
+                <div style="font-style:italic;">"It is with passion, courage of conviction, and strong sense of self that we take our next steps into the world."</div>
+            </div>
+            
+            <div class="line" data-delay="4800">Elle Woods did it.</div>
+            <div class="line anchor" data-delay="5400">So can you.</div>
+            
+            <div class="quote" data-delay="6600">"Don't be scared of change. Be scared of always being the same."</div>
+            
+            <div class="line anchor" data-delay="8000">Dreams of Paris.</div>
+            <div class="line" data-delay="8600">The city of light. Of freedom. Of being yourself without apology.</div>
+            <div class="line french" data-delay="9200">Paris n'est pas un lieu. C'est une promesse.</div>
+            
+            <div class="line anchor" data-delay="10200">Human rights work.</div>
+            <div class="line" data-delay="10800">Fighting for your community. For those who can't fight yet.</div>
+            <div class="line" data-delay="11400">You already started. 44,000 people saw it.</div>
+            
+            <div class="line anchor" data-delay="12400">A school of freedom.</div>
+            <div class="line" data-delay="13000">A language school where people learn more than words.</div>
+            <div class="line" data-delay="13600">Where they learn to find their voice.</div>
+            
+            <div class="line" data-delay="14600">Valentine's Days. Crimson and gold.</div>
+            <div class="line" data-delay="15200">Love celebrated. Not hidden.</div>
+            
+            <div class="line anchor" data-delay="16200">A future that exists because someone stayed long enough to imagine it.</div>
+            
+            <div class="line anchor" data-delay="17400">Have faith in people. But most importantly, have faith in yourself.</div>
+        </div>
+    </section>
+    
+    <section class="scene" id="continuation">
+        <div class="text-container">
+            <div class="line anchor" data-delay="1500">Morning found you.</div>
+            <div class="horizon visible" id="finalLine"></div>
+            
+            <div class="convo visible" data-delay="3000">
+                <div class="speaker">To myself:</div>
+                <div>"Sasha, no matter what, I will do the right thing. I trust you."</div>
+            </div>
+            
+            <div class="line french" data-delay="4500">Tu es resté.</div>
+            
+            <div style="height:60px;"></div>
+            
+            <div class="song-title french" data-delay="5500">Je ne regrette rien</div>
+            <div class="line" data-delay="6100" style="font-style:italic;opacity:0.9;">Edith Piaf</div>
+            <div class="line french" data-delay="6700">Un hymne à la liberté. Tout effacer et recommencer.</div>
+            <div class="line french" data-delay="7400">Le passé est balayé. Demain commence maintenant.</div>
+            
+            <div class="song-title french" data-delay="8400">Non coupable</div>
+            <div class="line" data-delay="9000" style="font-style:italic;opacity:0.9;">Lara Fabian</div>
+            <div class="line french" data-delay="9600">Refuser la culpabilité. Se défendre avec dignité.</div>
+            <div class="line french" data-delay="10300">Tu n'es pas coupable d'être toi-même.</div>
+            
+            <div class="song-title french" data-delay="11300">Hier encore</div>
+            <div class="line" data-delay="11900" style="font-style:italic;opacity:0.9;">Charles Aznavour</div>
+            <div class="line french" data-delay="12500">Le temps passe si vite. La jeunesse s'envole.</div>
+            <div class="line french" data-delay="13200">Mais aujourd'hui, tu choisis comment vivre demain.</div>
+            
+            <div style="height:80px;"></div>
+            
+            <div class="line anchor" data-delay="14500" style="font-size:2rem;">Am I not important?</div>
+            <div class="line anchor important-declaration" data-delay="16000">No. I am important to myself.</div>
+            
+            <div style="height:80px;"></div>
+            <div class="line" data-delay="9500">And that is everything.</div>
+            <div style="height:100px;"></div>
+            <div class="line" data-delay="11000" style="font-size:0.9rem;opacity:0.5;">This page exists because someone stayed alive.</div>
+        </div>
+    </section>
+
+    <script>
+        // ========== PASSWORD PROTECTION ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordOverlay = document.getElementById('password-overlay');
+            const passwordInput = document.getElementById('password-input');
+            const passwordSubmit = document.getElementById('password-submit');
+            const passwordError = document.getElementById('password-error');
+            const mainContent = document.getElementById('main-content');
+            
+            // Set your password here
+            const correctPassword = "ghostin2026";
+            
+            passwordSubmit.addEventListener('click', checkPassword);
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+            
+            function checkPassword() {
+                const enteredPassword = passwordInput.value.trim();
+                
+                if (enteredPassword === correctPassword) {
+                    // Correct password
+                    passwordOverlay.classList.add('hidden');
+                    mainContent.classList.add('visible');
+                    // Initialize the rest of the app
+                    initApp();
+                } else {
+                    // Wrong password
+                    passwordError.classList.add('show');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                    
+                    // Remove error after 2 seconds
+                    setTimeout(() => {
+                        passwordError.classList.remove('show');
+                    }, 2000);
+                }
+            }
+            
+            // Focus on password input when page loads
+            passwordInput.focus();
+        });
+
+        // ========== MAIN APPLICATION CODE ==========
+        function initApp() {
+            const canvas = document.getElementById('particles');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = document.documentElement.scrollHeight;
+            
+            const stars = [];
+            for (let i = 0; i < 150; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5,
+                    opacity: Math.random() * 0.6 + 0.2,
+                    twinkleSpeed: Math.random() * 0.02
+                });
+            }
+            
+            let isPaused = false;
+            
+            function drawStars() {
+                if (isPaused) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                stars.forEach(star => {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                    ctx.fill();
+                    star.opacity += star.twinkleSpeed;
+                    if (star.opacity > 0.8 || star.opacity < 0.2) star.twinkleSpeed *= -1;
+                });
+                requestAnimationFrame(drawStars);
+            }
+            drawStars();
+            
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const delay = entry.target.dataset.delay || 0;
+                        setTimeout(() => entry.target.classList.add('visible'), delay);
+                    }
+                });
+            }, { threshold: 0.3 });
+            
+            document.querySelectorAll('.line, .horizon, #fountain, .convo, .quote').forEach(el => observer.observe(el));
+            
+            const sunObs = new IntersectionObserver(e => {
+                if (e[0].isIntersecting) document.getElementById('sun').classList.add('visible');
+            }, { threshold: 0.5 });
+            sunObs.observe(document.getElementById('dawn'));
+            
+            const fountainObs = new IntersectionObserver(e => {
+                if (e[0].isIntersecting) document.getElementById('fountain').style.opacity = '1';
+            }, { threshold: 0.3 });
+            fountainObs.observe(document.getElementById('memory'));
+            
+            const heartObs = new IntersectionObserver(e => {
+                if (e[0].isIntersecting) document.getElementById('finalHeart').classList.add('visible');
+            }, { threshold: 0.5 });
+            heartObs.observe(document.getElementById('continuation'));
+            
+            const symbols = ['✦', '☾', '☀', '∞', '○', '◇', '♡', '✶'];
+            for (let i = 0; i < 25; i++) {
+                const s = document.createElement('div');
+                s.className = 'symbol ' + (Math.random() > 0.5 ? 'drift' : 'float');
+                s.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                s.style.left = Math.random() * 100 + '%';
+                s.style.top = Math.random() * 100 + '%';
+                s.style.animationDelay = Math.random() * 5 + 's';
+                document.body.appendChild(s);
+            }
+            
+            let audioPlaying = false;
+            const audio = new Audio('ghostin.mp3');
+            audio.loop = true;
+            audio.volume = 0.3;
+            
+            document.getElementById('audioToggle').onclick = function() {
+                audioPlaying = !audioPlaying;
+                this.textContent = audioPlaying ? '♪' : '☾';
+                if (audioPlaying) {
+                    audio.play().catch(e => console.log('Audio playback failed:', e));
+                } else {
+                    audio.pause();
+                }
+            };
+            
+            document.getElementById('pauseToggle').onclick = function() {
+                isPaused = !isPaused;
+                this.textContent = isPaused ? '▶' : '❚❚';
+                document.querySelectorAll('.symbol, .moon, .sun, .ripple, .song-title').forEach(el => {
+                    el.style.animationPlayState = isPaused ? 'paused' : 'running';
+                });
+                if (!isPaused) drawStars();
+            };
+            
+            window.onresize = () => {
+                canvas.width = window.innerWidth;
+                canvas.height = document.documentElement.scrollHeight;
+            };
+        }
+    </script>
+</body>
+</html>
